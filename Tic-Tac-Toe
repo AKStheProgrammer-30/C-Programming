@@ -1,0 +1,209 @@
+// Project TIC TAC TOE WITH AI and File Handling
+#include <stdio.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <time.h>
+
+// Day 1: Initialize the game board
+char board[3][3] = {   // A 3x3 char array representing the Tic Tac Toe game board
+    {'1', '2', '3'},   // Each cell is initially labeled with its corresponding position
+    {'4', '5', '6'},
+    {'7', '8', '9'}
+};
+
+// File pointers for logging moves and saving the code
+FILE *logFile;
+FILE *codeFile;
+
+// Day 2: Function to display the board
+void displayBoard(char board[3][3]) {  
+    for (int i = 0; i < 3; i++) {      
+        for (int j = 0; j < 3; j++) {  
+            printf(" %c ", board[i][j]); // Prints each cell value
+            if (j < 2) printf("|");      // Adds a vertical separator between cells
+        }
+        printf("\n");                    
+        if (i < 2) printf("---|---|---\n"); // Adds a horizontal separator after rows 1 and 2
+    }
+}
+
+// Day 3: Function to handle player move
+void playerMove(char board[3][3]) { 
+    int move;               // Variable to store the player's chosen position
+    bool validMove = false; // To check if the move is valid
+
+    while (!validMove) {    
+        printf("Player Enter your move (1-9): "); // Prompts the player to enter a move
+        scanf("%d", &move);                // Reads the player's input
+
+        int row = (move - 1) / 3;          // Calculates the row index based on input
+        int col = (move - 1) % 3;          // Calculates the column index based on input
+
+        if (move >= 1 && move <= 9 && board[row][col] != 'X' && board[row][col] != 'O') {
+            board[row][col] = 'X';         // Updates the board with player's symbol
+            validMove = true;             // Marks the move as valid
+        } else {
+            printf("Invalid move! Please try again.\n"); // Error message for invalid moves
+        }
+    }
+}
+
+// Day 5: AI logic for its move
+void aiMove(char board[3][3]) {
+    bool validMove = false;
+    srand(time(0));
+    while (!validMove) {
+        int move = rand() % 9 + 1; // Randomly selects a move between 1-9
+        int row = (move - 1) / 3;  // Calculates row index
+        int col = (move - 1) % 3;  // Calculates column index
+        if (board[row][col] != 'X' && board[row][col] != 'O') { // Checks for a valid position
+            board[row][col] = 'O'; // Marks the board with AI's symbol
+            validMove = true;
+        }
+    }
+}
+
+// Day 4: Function to check for a winner or draw
+int checkwin(char board[3][3]) { 
+    for (int i = 0; i < 3; i++) {         
+        if (board[i][0] == board[i][1] && board[i][1] == board[i][2]) {
+            return (board[i][0] == 'X') ? 1 : 2; // Returns 1 if 'X' wins, 2 if 'O' wins
+        }
+    }
+
+    for (int i = 0; i < 3; i++) {         
+        if (board[0][i] == board[1][i] && board[1][i] == board[2][i]) {
+            return (board[0][i] == 'X') ? 1 : 2;
+        }
+    }
+
+    if (board[0][0] == board[1][1] && board[1][1] == board[2][2]) {
+        return (board[0][0] == 'X') ? 1 : 2;
+    }
+
+    if (board[0][2] == board[1][1] && board[1][1] == board[2][0]) {
+        return (board[0][2] == 'X') ? 1 : 2;
+    }
+
+    bool draw = true;                     
+    for (int i = 0; i < 3; i++) {         
+        for (int j = 0; j < 3; j++) {     
+            if (board[i][j] != 'X' && board[i][j] != 'O') { 
+                draw = false; // Sets draw to false if an empty cell is found
+                break;
+            }
+        }
+    }
+    if (draw) {                          
+        return 3; // Returns 3 for a draw
+    }
+
+    return 0; // Returns 0 if the game is still ongoing
+}
+
+// Day 7: Function to read log file
+void readLogFile() {
+    FILE *readFile = fopen("game_log.txt", "r");
+    if (readFile == NULL) {
+        printf("No log file found.\n");
+        return;
+    }
+
+    char ch;
+    while ((ch = fgetc(readFile)) != EOF) {
+        putchar(ch);
+    }
+    fclose(readFile);
+}
+
+// Function to save the source code to a file
+void saveSourceCode() {
+    codeFile = fopen("code_backup.txt", "w");
+    if (codeFile == NULL) {
+        perror("Error opening or creating the code file");
+        return;
+    }
+
+    FILE *currentFile = fopen(__FILE__, "r");
+    if (currentFile == NULL) {
+        perror("Error opening current file");
+        fclose(codeFile);
+        return;
+    }
+
+    char ch;
+    while ((ch = fgetc(currentFile)) != EOF) {
+        fputc(ch, codeFile);
+    }
+
+    fclose(currentFile);
+    fclose(codeFile);
+}
+
+// Day 6: Connect everything with the game loop
+int main() {
+    printf("Welcome to Tic Tac Toe with AI!\n");
+    printf("You are 'X', and the AI is 'O'.\n");
+    printf("Pick a number between 1 and 9 to make your move.\n");
+    printf("Good luck!\n\n");
+
+    // Save the source code
+    saveSourceCode();
+
+    // Open the log file for appending or create it if it doesn't exist
+    logFile = fopen("game_log.txt", "a");
+    if (logFile == NULL) {
+        perror("Error opening or creating the log file");
+        return 1; // Exit if the file cannot be opened
+    }
+    fprintf(logFile, "New Game Started\n");
+
+    while (true) {                              // Infinite loop for game progression
+        // Player's turn
+        playerMove(board);                      
+        displayBoard(board);                    
+        fprintf(logFile, "Player moved:\n");
+        for (int i = 0; i < 3; i++) {          // Log the updated board
+            for (int j = 0; j < 3; j++) {
+                fprintf(logFile, "%c ", board[i][j]);
+            }
+            fprintf(logFile, "\n");
+        }
+
+        int result = checkwin(board);           
+        if (result == 1) {                      // If player wins
+            printf("Player wins!\n");
+            fprintf(logFile, "Result: Player Wins\n");
+            break;
+        } else if (result == 3) {               // If it's a draw
+            printf("Match draw\n");
+            fprintf(logFile, "Result: Draw\n");
+            break;
+        }
+
+        // AI's turn
+        aiMove(board);
+        displayBoard(board);
+        fprintf(logFile, "AI moved:\n");
+        for (int i = 0; i < 3; i++) {          // Log the updated board
+            for (int j = 0; j < 3; j++) {
+                fprintf(logFile, "%c ", board[i][j]);
+            }
+            fprintf(logFile, "\n");
+        }
+
+        result = checkwin(board);
+        if (result == 2) {                      // If AI wins
+            printf("AI wins!\n");
+            fprintf(logFile, "Result: AI Wins\n");
+            break;
+        } else if (result == 3) {               // If it's a draw
+            printf("Match draw\n");
+            fprintf(logFile, "Result: Draw\n");
+            break;
+        }
+    }
+
+    fclose(logFile); // Close the log file
+    return 0; // Ends the program
+}
